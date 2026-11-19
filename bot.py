@@ -13,7 +13,7 @@ from aiogram.fsm.state import State, StatesGroup
 
 # ================= SOZLAMALAR =================
 BOT_TOKEN = "9238053109:AAHWwYeZHpqwxISCDvPye_4tRvePYvFkHH0"
-ADMIN_ID = 123456789  # @userinfobot dan olingan ID raqamingiz
+ADMIN_ID = 7992781340  # @userinfobot dan olingan ID raqamingiz
 WEBAPP_URL = "https://smm-boostuz.netlify.app/"  # index.html joylangan HTTPS havola
 # ==============================================
 
