@@ -1,20 +1,19 @@
+import os
 import asyncio
 import logging
 import sqlite3
+from aiohttp import web
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import CommandStart, Command, CommandObject
-from aiogram.types import (
-    ReplyKeyboardMarkup, KeyboardButton,
-    InlineKeyboardMarkup, InlineKeyboardButton,
-    WebAppInfo
-)
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
 # ================= SOZLAMALAR =================
-BOT_TOKEN = "9238053109:AAHWwYeZHpqwxISCDvPye_4tRvePYvFkHH0"
-ADMIN_ID = 7992781340  # @userinfobot dan olingan ID raqamingiz
-WEBAPP_URL = "https://smm-boostuz.netlify.app/"  # index.html joylangan HTTPS havola
+# Token endi kodingizda emas, Render sozlamasidan olinadi
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+ADMIN_ID = 7992781340
+WEBAPP_URL = "https://netlify.app"
 # ==============================================
 
 logging.basicConfig(level=logging.INFO)
@@ -39,7 +38,6 @@ class AdminState(StatesGroup):
     waiting_for_coin_user = State()
     waiting_for_coin_amount = State()
 
-# Foydalanuvchini bazaga qo'shish
 def register_user(user_id, full_name, ref_id=None):
     cursor.execute("SELECT user_id FROM users WHERE user_id = ?", (user_id,))
     if not cursor.fetchone():
@@ -54,7 +52,6 @@ def register_user(user_id, full_name, ref_id=None):
             return True
     return False
 
-# /start buyrug'i
 @dp.message(CommandStart())
 async def cmd_start(message: types.Message, command: CommandObject):
     ref_id = int(command.args) if (command.args and command.args.isdigit()) else None
@@ -66,7 +63,6 @@ async def cmd_start(message: types.Message, command: CommandObject):
         except Exception:
             pass
 
-    # Web App ochish tugmasi
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="🚀 Ilovani ochish (Web App)", web_app=WebAppInfo(url=WEBAPP_URL))]
     ])
@@ -161,27 +157,22 @@ async def update_user_coins(message: types.Message, state: FSMContext):
         pass
     await state.clear()
 
-async def main():
-    await dp.start_polling(bot)
-
-if __name__ == "__main__":
-    asyncio.run(main())
-
-import os
-from aiohttp import web
-
+# Render uchun kichik veb-server (bot o'chib qolmasligi uchun)
 async def health_check(request):
-    return web.Response(text="Bot ishlayapti!")
+    return web.Response(text="SMM Boost Bot ishlayapti!")
 
-async def main():
+async def start_web_server():
     app = web.Application()
     app.router.add_get("/", health_check)
     runner = web.AppRunner(app)
     await runner.setup()
-    port = int(os.environ.get("PORT", 8080))
+    port = int(os.getenv("PORT", 8080))
     site = web.TCPSite(runner, "0.0.0.0", port)
     await site.start()
-    
+
+async def main():
+    await start_web_server()
+    await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
